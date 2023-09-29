@@ -15,7 +15,6 @@ min_severity_improvement = st.sidebar.number_input('SI Improvement [Number]',val
 min_overlap_extent = st.sidebar.number_input('Overlap Extent [m]',value=10.0, min_value=0.0)
 
 
-
 st.subheader('Defect Simulation (Past Inspection)')
 c1_no_of_defects,_,_ = st.columns(3)
 with c1_no_of_defects:
@@ -69,7 +68,13 @@ for defect_no in range(no_of_defects):
         severity = st.number_input('severity',value=2,min_value=1,max_value=4,key=f'defect_sev_{defect_no}')
         defect_severity.append(severity)
 
-st.subheader('Anomaly Simulation (Current inspection)')
+defect['start_pos'] = defect_start_pos
+defect['end_pos'] = defect_end_pos
+defect['defect_code_id'] = defect_severity
+defect['defect_id'] = defect.index+1
+st.write(defect)
+
+st.subheader('Anomaly Simulation (Current Inspection)')
 
 c1_no_of_anomalies,_, _ = st.columns(3)
 with c1_no_of_anomalies:
@@ -90,28 +95,20 @@ for anomaly_no in range(no_of_anomalies):
         severity = st.number_input('severity',value=2,min_value=1,max_value=4,key=f'anomaly_sev_{anomaly_no}')
         anomaly_severity.append(severity)
 
-defect['start_pos'] = defect_start_pos
-defect['end_pos'] = defect_end_pos
-defect['defect_code_id'] = defect_severity
-defect['defect_id'] = defect.index+1
-st.write(defect)
-
 anomaly['start_pos'] = anomaly_start_pos
 anomaly['end_pos'] = anomaly_end_pos
 anomaly['defect_code_id'] = anomaly_severity
 anomaly['anomaly_id'] = anomaly.index+1
+anomaly['length'] = anomaly['end_pos'] - anomaly['start_pos']
 st.write(anomaly)
 
 line_width = 10
 if st.button('Get recommendations'):
 
     no_of_scenarios = 1
-    lst1 = ['simulated scenario'] # scenarios['Between last and current inspection'].to_list()[:no_of_scenarios]
-    lst2 = no_of_scenarios*['anomaly-recommendation']
-    lst3 = no_of_scenarios*['defect-recommendation']
     fig = make_subplots(
-        rows=no_of_scenarios*3, cols=1,  specs=no_of_scenarios*[[{"type": "xy"}], [{"type": "table"}],[{"type": "table"}]],
-        subplot_titles=[item for pair in zip(lst1, lst2,lst3) for item in pair])
+        rows=no_of_scenarios, cols=1,
+        subplot_titles=['simulated scenario'])
 
     for scenario in range(1,no_of_scenarios+1):   
             
@@ -192,19 +189,7 @@ if st.button('Get recommendations'):
                             text = anomaly.defect_code_id.apply(lambda x:'Sev-'+str(x)),
                             name='anomaly', marker=dict(size=line_width,color='purple')), row=3*(scenario-1)+1, col=1)
         
-        table = go.Table(
-        header=dict(values=list(anomaly_recommendation.columns)),
-        cells=dict(values=[anomaly_recommendation[col] for col in anomaly_recommendation.columns])
-    )
-        fig.add_trace(table, row=3*(scenario-1)+2, col=1)
-        
-        table = go.Table(
-        header=dict(values=list(defect_recommendation.columns)),
-        cells=dict(values=[defect_recommendation[col] for col in defect_recommendation.columns])
-    )
-        fig.add_trace(table, row=3*(scenario-1)+3, col=1)
-
-    #     
+        #     
 
     # #     # Automatically adjust the x and y axis range
     # #     fig.update_layout(xaxis_range=[x_min-2*proximity, x_max+proximity], yaxis_range=[-2, count_of_traces+1])
@@ -213,11 +198,16 @@ if st.button('Get recommendations'):
 
     # Add a title to the plot
     fig.update_layout(title="Different scenarios, Red Trace: Defect (past inspection), Blue Trace: Anomaly (current inspection)",
-                    height=200*no_of_scenarios*3)
+                    height=300*no_of_scenarios)
     fig.update_yaxes(showticklabels=False)
     fig.update_yaxes(autorange='reversed')
     st.plotly_chart(fig, use_container_width=True)
 
+    st.info('Anomaly Recommendation')
+    st.write(anomaly_recommendation)
+
+    st.info('Defect Recommendation')
+    st.write(defect_recommendation)
 
 
 
