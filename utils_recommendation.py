@@ -17,7 +17,7 @@ def get_anomaly_recommendation(
     proximity: float = 0,
     min_percentage: float = 0.5,
     min_severity_improvement: int = 1,
-    min_overlap_extent: int = 10,
+    min_overlap_extent: float = 0.1,
     anomaly_recommendation_id_start: int = 0,
 ):
     """Returns anomaly_recommendation dataframe
@@ -28,7 +28,7 @@ def get_anomaly_recommendation(
         proximity (float): proximity tolerance of anomaly to defect. Defaults to 0.
         min_percentage (float): anomaly-length/defect range minimum percentage. Defaults to 0.5.
         min_severity_improvement (int): minimum severity improvement to create a new Defect. Defaults to 1.
-        min_overlap_extent (int): overlap extent in distance. Defaults to 10.
+        min_overlap_extent (float): overlap extent in percentage. Defaults to 0.1, i.e. 10%.
         anomaly_recommendation_id_start (int, optional): last index of anomaly recommendation table. Defaults to 0.
 
     Returns:
@@ -96,8 +96,11 @@ def get_anomaly_recommendation(
                     )
                 )
                 & (
-                    defect["end_pos"].apply(lambda x: min(x, row.end_pos))
-                    - defect["start_pos"].apply(lambda x: max(x, row.start_pos))
+                    (
+                        defect["end_pos"].apply(lambda x: min(x, row.end_pos))
+                        - defect["start_pos"].apply(lambda x: max(x, row.start_pos))
+                    )
+                    / row.length
                     >= min_overlap_extent
                 )
             ].index.values
