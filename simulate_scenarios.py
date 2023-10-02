@@ -12,7 +12,7 @@ st.sidebar.title("Set simulation parameters")
 min_percentage = st.sidebar.number_input('Anomaly/Defect Range [%]',value=50.0, min_value=0.0, max_value=100.0)/100.0
 proximity = st.sidebar.number_input('Defect Proximity [m]',value=10.0, min_value=0.0)
 min_severity_improvement = st.sidebar.number_input('SI Improvement [Number]',value=1, min_value=0, max_value=4)
-min_overlap_extent = st.sidebar.number_input('Overlap Extent [m]',value=10.0, min_value=0.0)
+min_overlap_extent = st.sidebar.number_input('Overlap Extent [%]',value=10.0, min_value=0.0, max_value=100.0)/100.0
 
 
 st.subheader('Defect Simulation (Past Inspection)')
