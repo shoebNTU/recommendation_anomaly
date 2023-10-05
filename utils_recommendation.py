@@ -96,11 +96,11 @@ def get_anomaly_recommendation(
                     )
                 )
                 & (
-                    (
+                    row.length/(
                         defect["end_pos"].apply(lambda x: min(x, row.end_pos))
                         - defect["start_pos"].apply(lambda x: max(x, row.start_pos))
                     )
-                    / row.length
+                    
                     >= min_overlap_extent
                 )
             ].index.values
@@ -119,7 +119,7 @@ def get_anomaly_recommendation(
 
         elif (len(overlapping_index) == 1) and (
             row.length / defect.loc[overlapping_index]["length"].values[0]
-            < min_percentage
+            <= min_percentage
         ):
             create_string = "Create New Defect"
             _logger.debug(create_string)
@@ -173,7 +173,7 @@ def get_anomaly_recommendation(
                 ),
                 "length",
             ].values[0]
-            < min_percentage
+            <= min_percentage
         ):
             # only one defect < min_sev_improvement and anomaly/defect_range < min_percentage
             create_string = "Create New Defect"
@@ -208,7 +208,7 @@ def get_anomaly_recommendation(
                 ),
                 "length",
             ].values[0]
-            >= min_percentage
+            > min_percentage
         ):
             # only one defect < min_sev_improvement and anomaly/defect_range >= min_percentage
             # add to existing defects
@@ -255,7 +255,7 @@ def get_anomaly_recommendation(
                     ),
                     "length",
                 ]
-            ) >= min_percentage
+            ) > min_percentage
             past_defects_list = (
                 defect.loc[overlapping_index]["defect_id"]
                 .loc[(anomaly_to_defect_ratio[anomaly_to_defect_ratio == True]).index]
