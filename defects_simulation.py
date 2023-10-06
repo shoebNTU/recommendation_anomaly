@@ -66,8 +66,7 @@ if st.button('Get Data'):
 
     simulated_data = pd.concat([template.iloc[:16,:],pd.DataFrame(measurement),
                                 template.iloc[16:,:],pd.DataFrame(np.array(alarms_to_save))],ignore_index=True)
-    st.write(simulated_data)
-
+  
     buffer = io.BytesIO()
     # Create a Pandas Excel writer using XlsxWriter as the engine.
     with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
