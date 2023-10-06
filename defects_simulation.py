@@ -6,7 +6,7 @@ import io
 st.sidebar.title('Anomaly simulation')
 
 # read template file
-template = pd.read_excel('template.xlsx',header=None)
+template = pd.read_csv('template_old.csv',header=None)
 measurement_types = template.iloc[15,:].to_list()
 
 # remove battery volts
@@ -17,7 +17,7 @@ no_of_points = st.sidebar.number_input(value=1000,label='No. of measurement poin
 measurement_type = st.sidebar.selectbox('Select measurement type',measurements_considered[1:-2])
 
 distance = np.arange(no_of_points)
-measurement = np.zeros((no_of_points,len(measurement_types[:-2]))) #ignore last two columns
+measurement = np.zeros((no_of_points,len(measurement_types[:]))) #ignore last two columns
 measurement[:,0] = distance
 
 c1, c2, _ = st.columns(3)
@@ -25,7 +25,7 @@ with c1:
     no_of_anomalies = st.number_input(label='Enter number of anomalies',value=1)
 
 with c2:
-    file_name = st.text_input(value='scenario.xlsx',label='Please enter filename ending in xlsx')
+    file_name = st.text_input(value='scenario.csv',label='Please enter filename ending in .csv')
 
 c1, c2, c3 = st.columns(3)
 anomaly_start_pos = []
@@ -52,7 +52,7 @@ if st.button('Get Data'):
         measurement[indices,measurement_index] = anomaly_value[i]   
     
 
-    alarms = pd.DataFrame(measurement,columns=measurement_types[:-2])
+    alarms = pd.DataFrame(measurement,columns=measurement_types[:])
     col_names  = ['distance','Switch Blade LH','Switch Blade RH',
  'Top Left',
  'Top Right',
@@ -64,21 +64,14 @@ if st.button('Get Data'):
     alarms_to_save['High/Low'] = 'Low'
     alarms_to_save = alarms_to_save[['Channel','Meters','High/Low','value']]
 
-    simulated_data = pd.concat([template.iloc[:16,:],pd.DataFrame(measurement),
-                                template.iloc[16:,:],pd.DataFrame(np.array(alarms_to_save))],ignore_index=True)
-  
-    buffer = io.BytesIO()
-    # Create a Pandas Excel writer using XlsxWriter as the engine.
-    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        # Write each dataframe to a different worksheet.
-        simulated_data.to_excel(writer, sheet_name='in', index=None, header=None)
-   
-        # Close the Pandas Excel writer and output the Excel file to the buffer
-        writer.close()
+    output = io.BytesIO()
+    template.iloc[:14,0].to_csv(output,header=None,index=None)
+    pd.DataFrame(measurement,columns=measurement_types).to_csv(output,index=None, mode='a')
+    alarms_to_save.to_csv(output,index=None,mode='a')    
 
-        st.download_button(
-            label=f"Download Excel worksheet - {file_name}",
-            data=buffer,
-            file_name=file_name,
-            mime="application/vnd.ms-excel"
-        )
+    st.download_button(
+    label=f"Download {file_name}",
+    data=output,
+    file_name=file_name,
+    mime='text/csv',
+)
