@@ -77,7 +77,7 @@ if st.button('Get Data'):
         writer.close()
 
         st.download_button(
-            label="Download Excel worksheets",
+            label=f"Download Excel worksheet - {file_name}",
             data=buffer,
             file_name=file_name,
             mime="application/vnd.ms-excel"
