@@ -25,7 +25,8 @@ with c1:
     no_of_anomalies = st.number_input(label='Enter number of anomalies',value=1)
 
 with c2:
-    file_name = st.text_input(value='scenario.csv',label='Please enter filename ending in .csv')
+    file_name = st.text_input(value='scenario',label='Please enter filename')
+    file_name = file_name+'.csv'
 
 c1, c2, c3 = st.columns(3)
 anomaly_start_pos = []
