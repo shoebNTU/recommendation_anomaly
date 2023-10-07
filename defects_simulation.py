@@ -34,7 +34,7 @@ anomaly_value = []
 
 for anomaly_no in range(no_of_anomalies):
     with c1:
-        start_pos = st.number_input('start_pos',value=0.0,min_value=0.0, key=f'anomaly_start_{anomaly_no}')
+        start_pos = st.number_input('start_pos',value=0.0,min_value=0.0, step=1.0, key=f'anomaly_start_{anomaly_no}')
         anomaly_start_pos.append(start_pos)
     with c2:
         end_pos = st.number_input('end_pos',value=1.0*np.max(distance), step=1.0,key=f'anomaly_end_{anomaly_no}')
