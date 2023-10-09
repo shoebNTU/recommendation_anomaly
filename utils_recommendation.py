@@ -96,11 +96,13 @@ def get_anomaly_recommendation(
                     )
                 )
                 & (
-                    row.length/(
-                        defect["end_pos"].apply(lambda x: min(x, row.end_pos))
-                        - defect["start_pos"].apply(lambda x: max(x, row.start_pos))
+                    (
+                        (
+                            defect["end_pos"].apply(lambda x: min(x, row.end_pos))
+                            - defect["start_pos"].apply(lambda x: max(x, row.start_pos))
+                        ).apply(lambda x: max(x, 0))
                     )
-                    
+                    / (defect["length"])
                     >= min_overlap_extent
                 )
             ].index.values
