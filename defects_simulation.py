@@ -14,9 +14,10 @@ measurements_considered = measurement_types[:]
 measurements_considered.remove('Battery Volts')
 
 no_of_points = st.sidebar.number_input(value=1000,label='No. of measurement points')
+step = st.sidebar.number_input(value=0.1,min_value=0.1,max_value=5.0,label='step_distance (difference in distance between two consecutive measurements)')
 measurement_type = st.sidebar.selectbox('Select measurement type',measurements_considered[1:-2])
 
-distance = np.arange(no_of_points)
+distance = step*np.arange(no_of_points)
 measurement = np.zeros((no_of_points,len(measurement_types[:]))) #ignore last two columns
 measurement[:,0] = distance
 
