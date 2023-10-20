@@ -42,7 +42,7 @@ for anomaly_no in range(no_of_anomalies):
         end_pos = st.number_input('end_pos',value=1.0*np.max(distance), step=1.0,key=f'anomaly_end_{anomaly_no}')
         anomaly_end_pos.append(end_pos)
     with c3:
-        value = st.number_input('value',value=0.0,min_value=0.0,key=f'anomaly_val_{anomaly_no}')
+        value = st.number_input('value',value=0.0,key=f'anomaly_val_{anomaly_no}')
         anomaly_value.append(value)
 
 
