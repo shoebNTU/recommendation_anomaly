@@ -15,44 +15,51 @@ measurements_considered.remove('Battery Volts')
 
 no_of_points = st.sidebar.number_input(value=1000,label='No. of measurement points')
 step = st.sidebar.number_input(value=0.1,min_value=0.1,max_value=5.0,label='step_distance (difference in distance between two consecutive measurements)')
-measurement_type = st.sidebar.selectbox('Select measurement type',measurements_considered[1:-2])
+measurement_type_list = st.sidebar.multiselect('Select measurement type',measurements_considered[1:-2],default=['Gauge'])
 
-distance = step*np.arange(no_of_points)
+# set distance
+distance = np.round(step*np.arange(no_of_points),2)
 measurement = np.zeros((no_of_points,len(measurement_types[:]))) #ignore last two columns
 measurement[:,0] = distance
 
+for measurement_type in measurement_type_list:
+    with st.expander(measurement_type, expanded=True):
+        c1, c2, _ = st.columns(3)
+        with c1:
+            no_of_anomalies = st.number_input(label='Enter number of anomalies',value=1,key=f'{measurement_type}')
+
+        # with c2:
+        #     file_name = st.text_input(value='scenario',label='Please enter filename')
+        #     file_name = file_name+'.csv'
+
+        c1, c2, c3 = st.columns(3)
+        anomaly_start_pos = []
+        anomaly_end_pos = []
+        anomaly_value = []
+
+        for anomaly_no in range(no_of_anomalies):
+            with c1:
+                start_pos = st.number_input('start_pos',value=0.0,min_value=0.0, step=1.0, key=f'anomaly_start_{anomaly_no}_{measurement_type}')
+                anomaly_start_pos.append(start_pos)
+            with c2:
+                end_pos = st.number_input('end_pos',value=1.0*np.max(distance), step=1.0,key=f'anomaly_end_{anomaly_no}_{measurement_type}')
+                anomaly_end_pos.append(end_pos)
+            with c3:
+                value = st.number_input('value',value=0.0,key=f'anomaly_val_{anomaly_no}_{measurement_type}')
+                anomaly_value.append(value)
+
+        measurement_index = measurement_types.index(measurement_type)
+
+        for i in range(no_of_anomalies):
+            indices = np.where((distance >= anomaly_start_pos[i]) & (distance <= anomaly_end_pos[i]))
+            measurement[indices,measurement_index] = anomaly_value[i]   
+
 c1, c2, _ = st.columns(3)
 with c1:
-    no_of_anomalies = st.number_input(label='Enter number of anomalies',value=1)
-
-with c2:
-    file_name = st.text_input(value='scenario',label='Please enter filename')
+    file_name = st.text_input(value='scenario',label='Please enter filename to be saved')
     file_name = file_name+'.csv'
 
-c1, c2, c3 = st.columns(3)
-anomaly_start_pos = []
-anomaly_end_pos = []
-anomaly_value = []
-
-for anomaly_no in range(no_of_anomalies):
-    with c1:
-        start_pos = st.number_input('start_pos',value=0.0,min_value=0.0, step=1.0, key=f'anomaly_start_{anomaly_no}')
-        anomaly_start_pos.append(start_pos)
-    with c2:
-        end_pos = st.number_input('end_pos',value=1.0*np.max(distance), step=1.0,key=f'anomaly_end_{anomaly_no}')
-        anomaly_end_pos.append(end_pos)
-    with c3:
-        value = st.number_input('value',value=0.0,key=f'anomaly_val_{anomaly_no}')
-        anomaly_value.append(value)
-
-
-if st.button('Get Data'):
-    measurement_index = measurement_types.index(measurement_type)
-
-    for i in range(no_of_anomalies):
-        indices = np.where((distance >= anomaly_start_pos[i]) & (distance <= anomaly_end_pos[i]))
-        measurement[indices,measurement_index] = anomaly_value[i]   
-    
+if st.button('Get Data'):   
 
     alarms = pd.DataFrame(measurement,columns=measurement_types[:])
     col_names  = ['distance','Switch Blade LH','Switch Blade RH',
