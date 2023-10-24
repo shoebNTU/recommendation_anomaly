@@ -15,7 +15,7 @@ measurements_considered.remove('Battery Volts')
 
 no_of_points = st.sidebar.number_input(value=1000,label='No. of measurement points')
 step = st.sidebar.number_input(value=0.1,min_value=0.1,max_value=5.0,label='step_distance (difference in distance between two consecutive measurements)')
-measurement_type_list = st.sidebar.multiselect('Select measurement type',measurements_considered[1:-2],default=['Gauge'])
+measurement_type_list = st.sidebar.multiselect('Please select one or more measurement types',measurements_considered[1:-2],default=['Gauge'])
 
 # set distance
 distance = np.round(step*np.arange(no_of_points),2)
