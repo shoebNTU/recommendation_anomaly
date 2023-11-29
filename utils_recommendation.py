@@ -84,6 +84,8 @@ def get_anomaly_recommendation(
         if len(overlapping_index) > 1:
             # if no. of associated defects > 1,
             # check for min_overlap_extent as well
+            start_pos = row.start_pos
+            end_pos = row.end_pos
             overlapping_index = defect[
                 (
                     (
@@ -98,8 +100,8 @@ def get_anomaly_recommendation(
                 & (
                     (
                         (
-                            defect["end_pos"].apply(lambda x: min(x, row.end_pos))
-                            - defect["start_pos"].apply(lambda x: max(x, row.start_pos))
+                            defect["end_pos"].apply(lambda x: min(x, end_pos))
+                            - defect["start_pos"].apply(lambda x: max(x, start_pos))
                         ).apply(lambda x: max(x, 0))
                     )
                     / (defect["length"])
@@ -281,6 +283,13 @@ def get_anomaly_recommendation(
 
     anomaly_recommendation["recommended_action_id"] = recommendations
     anomaly_recommendation["recommended_defect_id"] = recommended_defect_id
+    anomaly_recommendation.loc[
+        ~anomaly_recommendation["recommended_defect_id"].isna(), "recommended_defect_id"
+    ] = anomaly_recommendation[~anomaly_recommendation["recommended_defect_id"].isna()][
+        "recommended_defect_id"
+    ].apply(
+        lambda x: min(x)
+    )  # change list to minimum of defect_ids
 
     return anomaly_recommendation
 
