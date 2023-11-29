@@ -283,13 +283,13 @@ def get_anomaly_recommendation(
 
     anomaly_recommendation["recommended_action_id"] = recommendations
     anomaly_recommendation["recommended_defect_id"] = recommended_defect_id
-    anomaly_recommendation.loc[
-        ~anomaly_recommendation["recommended_defect_id"].isna(), "recommended_defect_id"
-    ] = anomaly_recommendation[~anomaly_recommendation["recommended_defect_id"].isna()][
-        "recommended_defect_id"
-    ].apply(
-        lambda x: min(x)
-    )  # change list to minimum of defect_ids
+    # anomaly_recommendation.loc[
+    #     ~anomaly_recommendation["recommended_defect_id"].isna(), "recommended_defect_id"
+    # ] = anomaly_recommendation[~anomaly_recommendation["recommended_defect_id"].isna()][
+    #     "recommended_defect_id"
+    # ].apply(
+    #     lambda x: min(x)
+    # )  # change list to minimum of defect_ids
 
     return anomaly_recommendation
 
