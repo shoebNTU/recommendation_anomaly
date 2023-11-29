@@ -1,15 +1,10 @@
 import itertools
-import logging
+from loguru import logger
 
 import numpy as np
 import pandas as pd
 
 from config_logging import setup_logging
-
-# setup logging
-setup_logging(logging, logging.DEBUG)
-_logger = logging.getLogger(__name__)
-
 
 def get_anomaly_recommendation(
     anomaly: pd.DataFrame,
@@ -58,12 +53,12 @@ def get_anomaly_recommendation(
     recommended_defect_id = []
 
     if len(defect) == 0:  # if defect doesn't exist
-        _logger.debug("No past defects exist. Let's create new defects.")
+        logger.debug("No past defects exist. Let's create new defects.")
         anomaly_recommendation["recommended_action_id"] = "Create New Defect"
         return anomaly_recommendation
 
     # this section will be executed if defects exist
-    _logger.debug("past defects exist")
+    logger.debug("past defects exist")
     defect["length"] = defect["end_pos"] - defect["start_pos"]
 
     for _, row in anomaly.iterrows():
@@ -77,6 +72,14 @@ def get_anomaly_recommendation(
                 | (
                     (defect.end_pos <= row.end_pos + proximity)
                     & (defect.end_pos >= row.start_pos - proximity)
+                )
+                | (
+                    (row.start_pos <= defect.end_pos + proximity)
+                    & (row.start_pos >= defect.start_pos - proximity)
+                )
+                |(
+                    (row.end_pos <= defect.end_pos + proximity)
+                    & (row.end_pos >= defect.start_pos - proximity)
                 )
             )
         ].index.values
@@ -117,7 +120,7 @@ def get_anomaly_recommendation(
 
             # create new defect
             create_string = "Create New Defect"
-            _logger.debug(create_string)
+            logger.debug(create_string)
             recommendations.append(create_string)
             recommended_defect_id.append(np.nan)
 
@@ -126,13 +129,13 @@ def get_anomaly_recommendation(
             < min_percentage
         ):
             create_string = "Create New Defect"
-            _logger.debug(create_string)
+            logger.debug(create_string)
             recommendations.append(create_string)
             recommended_defect_id.append(np.nan)
 
         elif len(overlapping_index) == 1:  # default scenario
             past_tag = "Tag to past defect"
-            _logger.debug(past_tag)
+            logger.debug(past_tag)
             recommendations.append(past_tag)
             recommended_defect_id.append(
                 list(defect.loc[overlapping_index]["defect_id"])
@@ -146,7 +149,7 @@ def get_anomaly_recommendation(
 
             # create new defects
             create_string = "Create New Defect"
-            _logger.debug(create_string)
+            logger.debug(create_string)
             recommendations.append(create_string)
             recommended_defect_id.append(np.nan)
 
@@ -181,7 +184,7 @@ def get_anomaly_recommendation(
         ):
             # only one defect < min_sev_improvement and anomaly/defect_range < min_percentage
             create_string = "Create New Defect"
-            _logger.debug(create_string)
+            logger.debug(create_string)
             recommendations.append(create_string)
             recommended_defect_id.append(np.nan)
 
@@ -217,7 +220,7 @@ def get_anomaly_recommendation(
             # only one defect < min_sev_improvement and anomaly/defect_range >= min_percentage
             # add to existing defects
             past_tag = "Tag to past defect"
-            _logger.debug(past_tag)
+            logger.debug(past_tag)
             recommendations.append(past_tag)
             past_defects_list = defect.loc[
                 (
@@ -268,7 +271,7 @@ def get_anomaly_recommendation(
 
             past_tag_dict = {0: "Create New Defect"}
             past_tag = past_tag_dict.get(len(past_defects_list), "Tag to past defect")
-            _logger.debug(past_tag)
+            logger.debug(past_tag)
             recommendations.append(past_tag)
             past_defects_list_dict = {0: np.nan}
             recommended_defect_id.append(
@@ -277,7 +280,7 @@ def get_anomaly_recommendation(
 
         else:
             create_string = "Create New Defect"
-            _logger.debug(create_string)
+            logger.debug(create_string)
             recommendations.append(create_string)
             recommended_defect_id.append(np.nan)
 
