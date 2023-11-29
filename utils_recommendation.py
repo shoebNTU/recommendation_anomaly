@@ -131,7 +131,7 @@ def get_anomaly_recommendation(
             recommended_defect_id.append(np.nan)
 
         elif len(overlapping_index) == 1:  # default scenario
-            past_tag = "Tag to past defect/s"
+            past_tag = "Tag to past defect"
             _logger.debug(past_tag)
             recommendations.append(past_tag)
             recommended_defect_id.append(
@@ -216,7 +216,7 @@ def get_anomaly_recommendation(
         ):
             # only one defect < min_sev_improvement and anomaly/defect_range >= min_percentage
             # add to existing defects
-            past_tag = "Tag to past defect/s"
+            past_tag = "Tag to past defect"
             _logger.debug(past_tag)
             recommendations.append(past_tag)
             past_defects_list = defect.loc[
@@ -267,7 +267,7 @@ def get_anomaly_recommendation(
             )
 
             past_tag_dict = {0: "Create New Defect"}
-            past_tag = past_tag_dict.get(len(past_defects_list), "Tag to past defect/s")
+            past_tag = past_tag_dict.get(len(past_defects_list), "Tag to past defect")
             _logger.debug(past_tag)
             recommendations.append(past_tag)
             past_defects_list_dict = {0: np.nan}
