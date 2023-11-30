@@ -1,10 +1,7 @@
-import itertools
 from loguru import logger
 
 import numpy as np
 import pandas as pd
-
-from config_logging import setup_logging
 
 def get_anomaly_recommendation(
     anomaly: pd.DataFrame,
@@ -60,6 +57,7 @@ def get_anomaly_recommendation(
     # this section will be executed if defects exist
     logger.debug("past defects exist")
     defect["length"] = defect["end_pos"] - defect["start_pos"]
+    defect["length"][defect["length"] == 0] = 1e-6
 
     for _, row in anomaly.iterrows():
 
@@ -99,6 +97,14 @@ def get_anomaly_recommendation(
                         (defect.end_pos <= row.end_pos + proximity)
                         & (defect.end_pos >= row.start_pos - proximity)
                     )
+                    | (
+                    (row.start_pos <= defect.end_pos + proximity)
+                    & (row.start_pos >= defect.start_pos - proximity)
+                )
+                |(
+                    (row.end_pos <= defect.end_pos + proximity)
+                    & (row.end_pos >= defect.start_pos - proximity)
+                )
                 )
                 & (
                     (
@@ -286,15 +292,45 @@ def get_anomaly_recommendation(
 
     anomaly_recommendation["recommended_action_id"] = recommendations
     anomaly_recommendation["recommended_defect_id"] = recommended_defect_id
-    # anomaly_recommendation.loc[
-    #     ~anomaly_recommendation["recommended_defect_id"].isna(), "recommended_defect_id"
-    # ] = anomaly_recommendation[~anomaly_recommendation["recommended_defect_id"].isna()][
-    #     "recommended_defect_id"
-    # ].apply(
-    #     lambda x: min(x)
-    # )  # change list to minimum of defect_ids
+    anomaly_recommendation.loc[
+        ~anomaly_recommendation["recommended_defect_id"].isna(), "recommended_defect_id"
+    ] = anomaly_recommendation[~anomaly_recommendation["recommended_defect_id"].isna()][
+        "recommended_defect_id"
+    ].apply(
+        lambda x: min(x)
+    )  # change list to minimum of defect_ids
 
-    return anomaly_recommendation
+    anomaly_rec_list = []
+    for _, group_rec in anomaly_recommendation.groupby('recommended_defect_id'):
+        logger.debug(group_rec)
+        if group_rec.shape[0] > 1:
+
+            group_rec = (group_rec.merge(defect[['defect_id','length','start_pos','end_pos']], left_on='recommended_defect_id', right_on='defect_id')).merge(anomaly[['anomaly_id','start_pos','end_pos']],on='anomaly_id',suffixes=('_def', '_anom'))
+            group_rec['overlap'] = (group_rec[["end_pos_def","end_pos_anom"]].min(axis=1) - group_rec[["start_pos_def","start_pos_anom"]].max(axis=1))/(group_rec['length'])
+            group_rec['defect_proximity'] = np.minimum(np.minimum(abs(group_rec.start_pos_def - group_rec.start_pos_anom), abs(group_rec.start_pos_def - group_rec.end_pos_anom)),
+            np.minimum(abs(group_rec.end_pos_def - group_rec.start_pos_anom), abs(group_rec.end_pos_def - group_rec.end_pos_anom)))
+
+            group_rec['recommended_defect_id'] = np.nan
+            group_rec['recommended_action_id'] = "Create New Defect"
+
+            if len(group_rec["overlap"][group_rec["overlap"]>0]):
+                max_overlap_loc = group_rec["overlap"][group_rec["overlap"]>0].idxmax()
+                group_rec.loc[max_overlap_loc,'recommended_action_id'] = 'Tag to past defect'
+                group_rec.loc[max_overlap_loc,'recommended_defect_id'] = group_rec.loc[max_overlap_loc,'defect_id']    
+
+            elif group_rec['defect_proximity'].nunique() > 1:
+                min_prox_loc = group_rec['defect_proximity'].idxmin()
+                group_rec.loc[min_prox_loc,'recommended_action_id'] = 'Tag to past defect'
+                group_rec.loc[min_prox_loc,'recommended_defect_id'] = group_rec.loc[min_prox_loc,'defect_id']
+
+            else:
+                default_loc = 0
+                group_rec.loc[default_loc,'recommended_action_id'] = 'Tag to past defect'
+                group_rec.loc[default_loc,'recommended_defect_id'] = group_rec.loc[default_loc,'defect_id']
+       
+            anomaly_rec_list.append(group_rec)
+
+    return pd.concat(anomaly_rec_list,ignore_index=True)[anomaly_recommendation.columns]
 
 
 def get_defect_recommendation(
@@ -310,13 +346,8 @@ def get_defect_recommendation(
         defect_recommendation (pd.DataFrame): defect recommendation dataframe primarily to close non-existent defects
     """
 
-    recommended_defects = set(
-        list(
-            itertools.chain(
-                *list(anomaly_recommendation.recommended_defect_id.dropna())
-            )
-        )
-    )
+    recommended_defects = set(anomaly_recommendation.recommended_defect_id.dropna())  
+
     existing_defects = set(defect.defect_id)
     defect_recommendation = pd.DataFrame(
         columns=[
