@@ -331,7 +331,7 @@ def get_anomaly_recommendation(
         anomaly_rec_list.append(group_rec)
     anomaly_rec_list.append(anomaly_recommendation[anomaly_recommendation["recommended_defect_id"].isna()])
     
-    return pd.concat(anomaly_rec_list,ignore_index=True)[anomaly_recommendation.columns]
+    return (pd.concat(anomaly_rec_list,ignore_index=True)[anomaly_recommendation.columns]).sort_values(by=['anomaly_id'])
 
 
 def get_defect_recommendation(
