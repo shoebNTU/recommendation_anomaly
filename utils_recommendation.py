@@ -328,7 +328,7 @@ def get_anomaly_recommendation(
                 group_rec.loc[default_loc,'recommended_action_id'] = 'Tag to past defect'
                 group_rec.loc[default_loc,'recommended_defect_id'] = group_rec.loc[default_loc,'defect_id']
        
-            anomaly_rec_list.append(group_rec)
+        anomaly_rec_list.append(group_rec)
 
     return pd.concat(anomaly_rec_list,ignore_index=True)[anomaly_recommendation.columns]
 
